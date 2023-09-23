@@ -16,10 +16,16 @@ type
     IntLit    = "$int"
     FloatLit  = "$float"
     Ident     = "$ident"
+    LParen    = "'('"
+    RParen    = "')'"
+    LBracket  = "'['"
+    RBracket  = "']'"
+    LBrace    = "'{'"
+    RBrace    = "'}'"
   Token* = object
     span*: Span
     case kind*: TokenKind
-    of Eof:
+    of Eof, LParen, RParen, LBracket, RBracket, LBrace, RBrace:
       discard
     of StrLit, Ident:
       str*: string
@@ -185,6 +191,24 @@ proc next*(lexer): !!Token =
   of 'a'..'z', 'A'..'Z':
     let (str, endPos) = lexer.lexIdent()
     lexer.token = Token(kind: Ident, str: str, span: start..endPos)
+  of '(':
+    lexer.token = Token(kind: LParen, span: start..start)
+    discard lexer.nextRune()
+  of ')':
+    lexer.token = Token(kind: RParen, span: start..start)
+    discard lexer.nextRune()
+  of '[':
+    lexer.token = Token(kind: LBracket, span: start..start)
+    discard lexer.nextRune()
+  of ']':
+    lexer.token = Token(kind: RBracket, span: start..start)
+    discard lexer.nextRune()
+  of '{':
+    lexer.token = Token(kind: LBrace, span: start..start)
+    discard lexer.nextRune()
+  of '}':
+    lexer.token = Token(kind: RBrace, span: start..start)
+    discard lexer.nextRune()
   of EndOfFile:
     lexer.token = Token(kind: Eof, span: lexer.position()..lexer.position())
   else:

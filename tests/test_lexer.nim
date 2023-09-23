@@ -59,3 +59,36 @@ suite "lexer":
     check token.span.line == 1..1
     check token.span.col == 11..19
     check token.span.offset == 11..19
+  test "parens, brackets and braces":
+    lexer.open(newStringStream("()  [] {}"))
+    discard lexer.next.getVal() # first call for initialization
+    var token = lexer.next().getVal()
+    check token.kind == LParen
+    check token.span.line == 1..1
+    check token.span.col == 0..0
+    check token.span.offset == token.span.col
+    token = lexer.next().getVal()
+    check token.kind == RParen
+    check token.span.line == 1..1
+    check token.span.col == 1..1
+    check token.span.offset == token.span.col
+    token = lexer.next().getVal()
+    check token.kind == LBracket
+    check token.span.line == 1..1
+    check token.span.col == 4..4
+    check token.span.offset == token.span.col
+    token = lexer.next().getVal()
+    check token.kind == RBracket
+    check token.span.line == 1..1
+    check token.span.col == 5..5
+    check token.span.offset == token.span.col
+    token = lexer.next().getVal()
+    check token.kind == LBrace
+    check token.span.line == 1..1
+    check token.span.col == 7..7
+    check token.span.offset == token.span.col
+    token = lexer.next().getVal()
+    check token.kind == RBrace
+    check token.span.line == 1..1
+    check token.span.col == 8..8
+    check token.span.offset == token.span.col
