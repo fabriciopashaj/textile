@@ -12,10 +12,11 @@ type
 
   TokenKind* {.pure.} = enum
     Eof
-    StrLit    = "$strlit"
+    StrLit    = "$str"
     IntLit    = "$int"
     FloatLit  = "$float"
     Ident     = "$ident"
+    Operator  = "$operator"
     LParen    = "'('"
     RParen    = "')'"
     LBracket  = "'['"
@@ -27,7 +28,7 @@ type
     case kind*: TokenKind
     of Eof, LParen, RParen, LBracket, RBracket, LBrace, RBrace:
       discard
-    of StrLit, Ident:
+    of StrLit, Ident, Operator:
       str*: string
     of IntLit:
       integer*: BiggestInt
@@ -49,6 +50,13 @@ func `..`(start, finish: Pos): Span {.inline.} =
 using
   L: Lexer
   lexer: var Lexer
+
+const OperatorSymbol = PunctuationChars - {
+  '(', ')',
+  '[', ']',
+  '{', '}',
+  '#', '@', ',', '"', '`', '\''
+}
 
 func `<=`(a, b: Rune): bool {.inline.} = int32(a) <= int32(b)
 func `>=`(a, b: Rune): bool {.inline.} = int32(a) >= int32(b)
@@ -209,6 +217,16 @@ proc next*(lexer): !!Token =
   of '}':
     lexer.token = Token(kind: RBrace, span: start..start)
     discard lexer.nextRune()
+  of OperatorSymbol:
+    var op = newStringOfCap(1)
+    while size(lexer.rune) == 1 and lexer.rune.char in OperatorSymbol:
+      op.add(lexer.rune.char)
+      discard lexer.nextRune()
+    let endPos = (
+      line: start.line,
+      col: start.col + op.len - 1,
+      offset: start.offset + op.len - 1)
+    lexer.token = Token(kind: Operator, str: op, span: start..endPos)
   of EndOfFile:
     lexer.token = Token(kind: Eof, span: lexer.position()..lexer.position())
   else:

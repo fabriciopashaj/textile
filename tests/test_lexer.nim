@@ -92,3 +92,23 @@ suite "lexer":
     check token.span.line == 1..1
     check token.span.col == 8..8
     check token.span.offset == token.span.col
+  test "operators":
+    lexer.open(newStringStream("+ - * / -+- = += -= =~"))
+    discard lexer.next.getVal() # first call for initialization
+    template testOpToken(expectStr, expectCol: untyped): untyped =
+      bind lexer
+      let token = lexer.next().getVal()
+      check token.kind == Operator
+      check token.str == expectStr
+      check token.span.line == 1..1
+      check token.span.col == expectCol
+      check token.span.offset == expectCol
+    testOpToken("+", 0..0)
+    testOpToken("-", 2..2)
+    testOpToken("*", 4..4)
+    testOpToken("/", 6..6)
+    testOpToken("-+-", 8..10)
+    testOpToken("=", 12..12)
+    testOpToken("+=", 14..15)
+    testOpToken("-=", 17..18)
+    testOpToken("=~", 20..21)
